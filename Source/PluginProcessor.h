@@ -36,6 +36,17 @@ namespace Params
     Bypassed_Low_Band,
     Bypassed_Mid_Band,
     Bypassed_High_Band,
+
+    Mute_Low_Band,
+    Mute_Mid_Band,
+    Mute_High_Band,
+
+    Solo_Low_Band,
+    Solo_Mid_Band,
+    Solo_High_Band,
+
+    Input_Gain,
+    Output_Gain
   };
 
   inline const std::map<Names, juce::String>& GetParams()
@@ -62,6 +73,17 @@ namespace Params
       {Bypassed_Low_Band, "Bypassed Low Band"},
       {Bypassed_Mid_Band, "Bypassed Mid Band"},
       {Bypassed_High_Band, "Bypassed High Band"},
+
+      {Mute_Low_Band, "Mute Low Band"},
+      {Mute_Mid_Band, "MuteMid Band"},
+      {Mute_High_Band, "MuteHigh Band"},
+
+      {Solo_Low_Band, "Solo Low Band"},
+      {Solo_Mid_Band, "Solo Mid Band"},
+      {Solo_High_Band, "Solo High Band"},
+
+      {Input_Gain, "Gain In"},
+      {Output_Gain, "Gain Out"}
     };
 
     return params;
@@ -77,6 +99,8 @@ struct CompressorBand {
     juce::AudioParameterFloat* threshold { nullptr };
     juce::AudioParameterChoice* ratio { nullptr };
     juce::AudioParameterBool* bypassed { nullptr };
+    juce::AudioParameterBool* mute { nullptr };
+    juce::AudioParameterBool* solo { nullptr };
 
     void prepare(const juce::dsp::ProcessSpec& spec)
     {
@@ -151,7 +175,10 @@ public:
     APVTS apvts { *this, nullptr,
         "Parameters", createParameterLayout() };
 private:
-    CompressorBand compressor;
+    std::array<CompressorBand, 3> compressors;
+    CompressorBand& lowBandComp = compressors[0];
+    CompressorBand& midBandComp = compressors[1];
+    CompressorBand& highBandComp = compressors[2];
 
     using Filter = juce::dsp::LinkwitzRileyFilter<float>;
     Filter  LP1, AP2,
@@ -162,6 +189,20 @@ private:
     juce::AudioParameterFloat* midHighCrossover { nullptr };
 
     std::array<juce::AudioBuffer<float>, 3> filterBuffers;
+    juce::dsp::Gain<float> inputGain, outputGain;
+
+    juce::AudioParameterFloat* inputGainParam { nullptr };
+    juce::AudioParameterFloat* outputGainParam { nullptr };
+
+    template<typename T, typename U>
+    void applyGain(T& buffer, U& gain)
+    {
+      auto block = juce::dsp::AudioBlock<float>(buffer);
+      auto ctx = juce::dsp::ProcessContextReplacing<float>(block);
+      gain.process(ctx);
+    };
+    void updateState();
+    void splitBands(juce::AudioBuffer<float>& buffer);
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MultiBandCompressorAudioProcessor)
 };
