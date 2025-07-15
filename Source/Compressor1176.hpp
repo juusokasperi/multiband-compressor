@@ -1,6 +1,8 @@
 #pragma once
 #include <JuceHeader.h>
 
+static constexpr int FET_LOOKUP_SIZE = 1024;
+
 class Compressor1176
 {
 	public:
@@ -22,19 +24,35 @@ class Compressor1176
 		void reset();
 
 		void process(juce::AudioBuffer<float>& buffer);
+
+		// Fet
+		float saturateFET(float x);
+		void initFETLookup();
+		float cubicInterpolate(float y0, float y1, float y2, float y3, float x);
+		float lookupFET(float x);
+		float softClip(float x);
 	private:
 		float inputGain = 0.0f;
 		float outputGain = 0.0f;
 		float ratio = 4.0f;
 		float attackTime = 0.5f;
 		float releaseTime = 600.0f;
-		float smoothedGainReduction = 1.0f;
+		std::vector<float> smoothedGainReduction;
+		int numChannels = 2;
 
 		double sampleRate = 44100.0;
 
 		std::vector<float> envelope;
-		juce::dsp::IIR::Filter<float> lowShelfFilter;
-		juce::dsp::IIR::Filter<float> highShelfFilter;
+		std::vector<juce::dsp::IIR::Filter<float>> lowShelfFilter;
+		std::vector<juce::dsp::IIR::Filter<float>> highShelfFilter;
+		std::vector<float> lastBoostDb;
+		std::vector<float> fetLUT;
+
+		juce::dsp::Oversampling<float> overSampling {
+			2,
+			2,
+			juce::dsp::Oversampling<float>::filterHalfBandPolyphaseIIR
+		};
 
 		float computeGainReduction(float level);
 };

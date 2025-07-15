@@ -50,8 +50,8 @@ MultiBandCompressorAudioProcessor::MultiBandCompressorAudioProcessor()
 
     boolHelper(compressor.bypass, Names::Bypass);
 
-    floatHelper(inputGainParam, Names::Input_Gain);
-    floatHelper(outputGainParam, Names::Output_Gain);
+    floatHelper(compressor.inputGain, Names::Input_Gain);
+    floatHelper(compressor.outputGain, Names::Output_Gain);
 }
 
 MultiBandCompressorAudioProcessor::~MultiBandCompressorAudioProcessor()
@@ -133,10 +133,8 @@ void MultiBandCompressorAudioProcessor::prepareToPlay (double sampleRate, int sa
     for (auto &comp : compressors)
         comp.prepare(spec);
 
-    inputGain.prepare(spec);
-    outputGain.prepare(spec);
-    inputGain.setRampDurationSeconds(0.05);
-    outputGain.setRampDurationSeconds(0.05);
+    // inputGain.setRampDurationSeconds(0.05);
+    // outputGain.setRampDurationSeconds(0.05);
 }
 
 void MultiBandCompressorAudioProcessor::releaseResources()
@@ -175,9 +173,6 @@ void MultiBandCompressorAudioProcessor::updateState()
 {
     for (auto& compressor : compressors)
         compressor.updateCompressorSettings();
-
-    outputGain.setGainDecibels(outputGainParam->get());
-    inputGain.setGainDecibels(inputGainParam->get());
 }
 
 void MultiBandCompressorAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
@@ -186,20 +181,10 @@ void MultiBandCompressorAudioProcessor::processBlock (juce::AudioBuffer<float>& 
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
 
-    // In case we have more outputs than inputs, this code clears any output
-    // channels that didn't contain input data, (because these aren't
-    // guaranteed to be empty - they may contain garbage).
-    // This is here to avoid people getting screaming feedback
-    // when they first compile a plugin, but obviously you don't need to keep
-    // this code if your algorithm always overwrites all the output channels.
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
     updateState();
-    applyGain(buffer, inputGain);
-
     compressor.process(buffer);
-
-    applyGain(buffer, outputGain);
 }
 
 //==============================================================================
@@ -241,7 +226,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout MultiBandCompressorAudioProc
 
     const auto& params = GetParams();
 
-    auto gainRange = NormalisableRange<float>(-24.f, 24.f, 0.5f, 1);
+    auto gainRange = NormalisableRange<float>(-12.f, 12.f, 0.5f, 1);
     layout.add(std::make_unique<AudioParameterFloat>(params.at(Names::Input_Gain), params.at(Names::Input_Gain), gainRange, 0));
     layout.add(std::make_unique<AudioParameterFloat>(params.at(Names::Output_Gain), params.at(Names::Output_Gain), gainRange, 0));
 

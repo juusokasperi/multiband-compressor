@@ -45,6 +45,8 @@ struct CompressorBand {
     juce::AudioParameterFloat* attack { nullptr };
     juce::AudioParameterFloat* release { nullptr };
     juce::AudioParameterChoice* ratio { nullptr };
+    juce::AudioParameterFloat* inputGain { nullptr };
+    juce::AudioParameterFloat* outputGain { nullptr };
     juce::AudioParameterBool* bypass { nullptr };
 
     void prepare(const juce::dsp::ProcessSpec& spec)
@@ -59,6 +61,8 @@ struct CompressorBand {
 
       compressor.setRatio(
           ratio->getCurrentChoiceName().getFloatValue());
+      compressor.setInputGain(inputGain->get());
+      compressor.setOutputGain(outputGain->get());
     }
 
     void process(juce::AudioBuffer<float>& buffer)
@@ -120,19 +124,6 @@ private:
     std::array<CompressorBand, 1> compressors;
     CompressorBand& compressor = compressors[0];
 
-    std::array<juce::AudioBuffer<float>, 1> filterBuffer;
-    juce::dsp::Gain<float> inputGain, outputGain;
-
-    juce::AudioParameterFloat* inputGainParam { nullptr };
-    juce::AudioParameterFloat* outputGainParam { nullptr };
-
-    template<typename T, typename U>
-    void applyGain(T& buffer, U& gain)
-    {
-      auto block = juce::dsp::AudioBlock<float>(buffer);
-      auto ctx = juce::dsp::ProcessContextReplacing<float>(block);
-      gain.process(ctx);
-    };
     void updateState();
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MultiBandCompressorAudioProcessor)
