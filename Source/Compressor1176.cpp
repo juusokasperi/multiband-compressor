@@ -65,12 +65,12 @@ void Compressor1176::reset()
 
 float Compressor1176::getThreshold()
 {
-	if (ratio == 4.0f)	return -17.5f;
-	if (ratio == 8.0f)	return -12.8f;
+	if (ratio == 4.0f)	return -15.f;
+	if (ratio == 8.0f)	return -10.8f;
 	if (ratio == 12.0f)	return -9.6f;
-	if (ratio == 20.0f)	return -8.4f;
+	if (ratio == 20.0f)	return -7.6f;
 
-	return (-17.5f);
+	return (-15.f);
 }
 
 float Compressor1176::computeGainReduction(float level)
@@ -128,71 +128,73 @@ void Compressor1176::process(juce::AudioBuffer<float>& buffer)
 		{
 			float sample = data[i] * juce::Decibels::decibelsToGain(inputGain);
 			float rmsLevel = processRMS(ch, sample);
+
 			float targetGainReduction = computeGainReduction(rmsLevel);
 			float coeff = (targetGainReduction < smoothedGainReduction[ch])
 				? getSmoothingCoeff(attackTime)
 				: getSmoothingCoeff(releaseTime);
 			smoothedGainReduction[ch] = coeff * targetGainReduction + (1.0f - coeff) * smoothedGainReduction[ch];
-			data[i] = sample * smoothedGainReduction[ch];
+			sample *= smoothedGainReduction[ch];
+			sample *= juce::Decibels::decibelsToGain(outputGain);
+			data[i] = sample;
 		}
 	}
 	// juce::dsp::AudioBlock<float> inputBlock(buffer);
 	// juce::dsp::AudioBlock<float> oversampledBlock = overSampling.processSamplesUp(buffer);
 	// for (int ch = 0; ch < oversampledBlock.getNumChannels(); ++ch)
-	for (int ch = 0; ch < numChannels; ++ch)
-	{
-		//auto* data = oversampledBlock.getChannelPointer(ch);
-		//size_t numSamples = oversampledBlock.getNumSamples();
-		float* data = buffer.getWritePointer(ch);
-		size_t numSamples = buffer.getNumSamples();
-		for (size_t i = 0; i < numSamples; ++i)
-		{
-			float sample = data[i] * juce::Decibels::decibelsToGain(inputGain);
+	// {
+	// 	float* data = oversampledBlock.getChannelPointer(ch);
+	// 	size_t numSamples = oversampledBlock.getNumSamples();
 
-			float rmsLevel = processRMS(ch, sample);
-			float targetGainReduction = computeGainReduction(rmsLevel);
-			float coeff = (targetGainReduction < smoothedGainReduction[ch])
-				? getSmoothingCoeff(attackTime)
-				: getSmoothingCoeff(releaseTime);
-			smoothedGainReduction[ch] = coeff * targetGainReduction + (1.0f - coeff) * smoothedGainReduction[ch];
-			float shapedGain = lookupFET(smoothedGainReduction[ch]);
-			float processed = sample * shapedGain;
-			// if (smoothedGainReduction[ch] < 0.95f)
-			// {
-			// 	float maxBoost = 2.0f;
-			// 	float boostDb = juce::jmap(1.0f - smoothedGainReduction[ch], 0.0f, 1.0f, 0.0f, maxBoost);
-			// 	static float lastBoostDb = 0.0f;
-			// 	if (std::abs(boostDb - lastBoostDb) > 0.1f)
-			// 	{
-			// 		lowShelfFilter.coefficients = juce::dsp::IIR::Coefficients<float>::makeLowShelf(
-			// 			sampleRate, 100.0f, 0.707f, juce::Decibels::decibelsToGain(boostDb));
-			// 		highShelfFilter.coefficients = juce::dsp::IIR::Coefficients<float>::makeHighShelf(
-			// 			sampleRate, 8000.0f, 0.707f, juce::Decibels::decibelsToGain(boostDb));
-			// 		lastBoostDb = boostDb;
-			// 	}
+	// 	for (size_t i = 0; i < numSamples; ++i)
+	// 	{
+	// 		float sample = data[i] * juce::Decibels::decibelsToGain(inputGain);
+	// 		sample *= smoothedGainReduction[ch];
 
-			// 	processed = lowShelfFilter.processSample(processed);
-			// 	processed = highShelfFilter.processSample(processed);
-			// }
-			processed *= juce::Decibels::decibelsToGain(outputGain);
-			if (std::isnan(processed) || std::isinf(processed))
-				processed = 0.0f;
-			processed = std::clamp(processed, -1.0f, 1.0f);
-			data[i] = processed;
-		}
-	}
-	//juce::dsp::AudioBlock<float> outputBlock(buffer);
-	//overSampling.processSamplesDown(outputBlock);
+	// 		sample = lookupFET(sample);
+	// // 		if (smoothedGainReduction[ch] < 0.95f)
+	// // 		{
+	// // 			float maxBoost = 2.0f;
+	// // 			float boostDb = juce::jmap(1.0f - smoothedGainReduction[ch], 0.0f, 1.0f, 0.0f, maxBoost);
+	// // 			static float lastBoostDb = 0.0f;
+	// // 			if (std::abs(boostDb - lastBoostDb) > 0.1f)
+	// // 			{
+	// // 				lowShelfFilter.coefficients = juce::dsp::IIR::Coefficients<float>::makeLowShelf(
+	// // 					sampleRate, 100.0f, 0.707f, juce::Decibels::decibelsToGain(boostDb));
+	// // 				highShelfFilter.coefficients = juce::dsp::IIR::Coefficients<float>::makeHighShelf(
+	// // 					sampleRate, 8000.0f, 0.707f, juce::Decibels::decibelsToGain(boostDb));
+	// // 				lastBoostDb = boostDb;
+	// // 			}
+
+	// // 			processed = lowShelfFilter.processSample(processed);
+	// // 			processed = highShelfFilter.processSample(processed);
+	// // 		}
+
+	// 		sample *= juce::Decibels::decibelsToGain(outputGain);
+	// 		if (std::isnan(sample) || std::isinf(sample))
+	// 			sample = 0.0f;
+	// 		sample = softClip(sample);
+	// 		data[i] = sample;
+	// 	}
+	// }
+	// juce::dsp::AudioBlock<float> outputBlock(buffer);
+	// overSampling.processSamplesDown(outputBlock);
 }
 
-float Compressor1176::saturateFET(float x)
+float Compressor1176::saturateFET(float x, float drive)
 {
-	float drive = 1.5f;
+	float threshold = 0.7f;
+	float scaledInput = x / threshold;
+
 	float asym = 0.15f;
-	if (x >= 0.0f)
-		return std::tanh(drive * x);
+
+	float saturated = 0;
+
+	if (scaledInput >= 0.0f)
+		saturated = std::tanh(drive * scaledInput);
 	else
-		return std::tanh(drive * (x + asym * x));
+		saturated = std::tanh(drive * (scaledInput + asym * scaledInput));
+	return saturated * threshold;
 }
 
 void Compressor1176::initFETLookup()
@@ -201,7 +203,7 @@ void Compressor1176::initFETLookup()
 	for (int i = 0; i < FET_LOOKUP_SIZE; ++i)
 	{
 		float x = -2.0f + 4.0f * (i / static_cast<float>(FET_LOOKUP_SIZE - 1));
-		fetLUT[i] = saturateFET(x);
+		fetLUT[i] = saturateFET(x, 1.0f);
 	}
 }
 
