@@ -26,7 +26,7 @@ class Compressor1176
 		void process(juce::AudioBuffer<float>& buffer);
 
 		// Fet
-		float saturateFET(float x);
+		float saturateFET(float x, float drive);
 		void initFETLookup();
 		float cubicInterpolate(float y0, float y1, float y2, float y3, float x);
 		float lookupFET(float x);
