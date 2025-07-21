@@ -41,6 +41,8 @@ class Compressor1176
 		int numChannels = 2;
 
 		double sampleRate = 44100.0;
+		float overSamplingFactor = 4.0f;
+		double overSampledRate;
 
 		std::vector<float> envelope;
 		std::vector<juce::dsp::IIR::Filter<float>> lowShelfFilter;
