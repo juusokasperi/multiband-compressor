@@ -212,7 +212,7 @@ void Compressor1176::initFETLookup()
 	for (int i = 0; i < FET_LOOKUP_SIZE; ++i)
 	{
 		float x = -2.0f + 4.0f * (i / static_cast<float>(FET_LOOKUP_SIZE - 1));
-		fetLUT[i] = saturateFET(x, 1.0f);
+		fetLUT[i] = saturateFET(x, 1.5f);
 	}
 }
 
@@ -227,6 +227,9 @@ float Compressor1176::cubicInterpolate(float y0, float y1, float y2, float y3, f
 
 float Compressor1176::lookupFET(float x)
 {
+	if (fetLUT.size() < 4)
+		return 0.0f;
+
 	x = std::clamp(x, -2.0f, 2.0f);
 	float norm = (x + 2.0f) / 4.0f;
 	float index = norm * (FET_LOOKUP_SIZE - 1);
