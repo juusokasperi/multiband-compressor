@@ -61,6 +61,7 @@ void Compressor1176::prepare( const juce::dsp::ProcessSpec& spec)
 	lowShelfFilter.resize(numChannels);
 	highShelfFilter.resize(numChannels);
 	lastBoostDb.resize(numChannels, 0.0f);
+	compressionHistory.resize(numChannels, 0.0f);
 	for (int ch = 0; ch < numChannels; ++ch)
 	{
 		lowShelfFilter[ch].prepare(overSampledSpec);
@@ -84,7 +85,7 @@ void Compressor1176::reset()
 		highShelfFilter[ch].reset();
 	}
 	lastBoostDb.resize(numChannels, 0.0f);
-
+	compressionHistory.resize(numChannels, 0.0f);
 }
 
 float Compressor1176::getThreshold()
@@ -120,15 +121,30 @@ float Compressor1176::getSmoothingCoeff(float timeMs)
 
 // Changing the beta to smaller values makes the detection slower
 // Currently its quite fast
-float Compressor1176::processRMS(int ch, float sample)
+// float Compressor1176::processRMS(int ch, float sample)
+// {
+// 	if (ch < 0 || ch >= static_cast<int>(envelope.size()))
+// 		return 0.0f;
+
+// 	float beta = 0.5f / overSamplingFactor;
+// 	float prevRms = envelope[ch];
+// 	float rmsSq = (1.0f - beta) * prevRms * prevRms + beta * sample * sample;
+// 	envelope[ch] = std::sqrt(std::max(0.0f, rmsSq));
+// 	return envelope[ch];
+// }
+
+float Compressor1176::processPeak(int ch, float sample)
 {
 	if (ch < 0 || ch >= static_cast<int>(envelope.size()))
 		return 0.0f;
 
-	float beta = 0.5f / overSamplingFactor;
-	float prevRms = envelope[ch];
-	float rmsSq = (1.0f - beta) * prevRms * prevRms + beta * sample * sample;
-	envelope[ch] = std::sqrt(std::max(0.0f, rmsSq));
+	float absSample = std::abs(sample);
+	float attackCoeff = getSmoothingCoeff(0.001f);
+	float releaseCoeff = getSmoothingCoeff(1.0f);
+	if (absSample > envelope[ch])
+		envelope[ch] = attackCoeff * absSample + (1.0f - attackCoeff) * envelope[ch];
+	else
+		envelope[ch] = releaseCoeff * absSample + (1.0f - releaseCoeff) * envelope[ch];
 	return envelope[ch];
 }
 
@@ -143,7 +159,7 @@ float Compressor1176::softClip(float x)
 		return x;
 }
 
-// The input gain is compensated w/ +12.0f (and later in output gain -12.0f)
+// The input gain is compensated w/ +8.0f (and later in output gain -8.0f)
 void Compressor1176::process(juce::AudioBuffer<float>& buffer)
 {
 	juce::dsp::AudioBlock<float> inputBlock(buffer);
@@ -157,12 +173,6 @@ void Compressor1176::process(juce::AudioBuffer<float>& buffer)
 		{
 			float sample = data[i] * juce::Decibels::decibelsToGain(inputGain + 8.0f);
 
-			// float rmsLevel = processRMS(ch, sample);
-			// float targetGainReduction = computeGainReduction(rmsLevel);
-			// float coeff = (targetGainReduction < smoothedGainReduction[ch])
-			// 	? getSmoothingCoeff(attackTime)
-			// 	: getSmoothingCoeff(releaseTime);
-			// smoothedGainReduction[ch] = coeff * targetGainReduction + (1.0f - coeff) * smoothedGainReduction[ch];
 			sample *= smoothedGainReduction[ch];
 			sample = lookupFET(sample);
 			if (smoothedGainReduction[ch] < 0.95f)
@@ -180,11 +190,22 @@ void Compressor1176::process(juce::AudioBuffer<float>& buffer)
 				sample = lowShelfFilter[ch].processSample(sample);
 				sample = highShelfFilter[ch].processSample(sample);
 			}
-			float rmsLevel = processRMS(ch, sample);
-			float targetGainReduction = computeGainReduction(rmsLevel);
+			float peakLevel = processPeak(ch, sample);
+			float targetGainReduction = computeGainReduction(peakLevel);
+
+			float compressionAmount = 1.0f - targetGainReduction;
+			if (compressionAmount > 0.05f)
+			{
+				float buildUpdRate = 2.0f / static_cast<float>(overSampledRate);
+				compressionHistory[ch] = std::min(compressionHistory[ch] + buildUpdRate, 1.0f);
+			}
+			else
+				compressionHistory[ch] *= 0.999f;
+			float programDependentRelease = releaseTime * (1.0f - compressionHistory[ch] * 0.6f);
+
 			float coeff = (targetGainReduction < smoothedGainReduction[ch])
 				? getSmoothingCoeff(attackTime)
-				: getSmoothingCoeff(releaseTime);
+				: getSmoothingCoeff(programDependentRelease);
 			smoothedGainReduction[ch] = coeff * targetGainReduction + (1.0f - coeff) * smoothedGainReduction[ch];
 
 			sample *= juce::Decibels::decibelsToGain(outputGain - 8.0f);
@@ -205,13 +226,17 @@ float Compressor1176::saturateFET(float x, float drive)
 
 	float asym = 0.3f;
 
-	float saturated = 0;
+	float linearPart = scaledInput;
+	float saturatedPart = 0;
 
 	if (scaledInput >= 0.0f)
-		saturated = std::tanh(drive * scaledInput);
+		saturatedPart = std::tanh(drive * scaledInput);
 	else
-		saturated = std::tanh(drive * (scaledInput + asym * scaledInput));
-	return saturated * threshold;
+		saturatedPart = std::tanh(drive * (scaledInput + asym * scaledInput));
+
+	float blend = std::min(std::abs(scaledInput) * drive, 1.0f);
+	float result = (1.0f - blend) * linearPart + blend * saturatedPart;
+	return result * threshold;
 }
 
 // Adjust the saturateFET second variable for more/less colouration.
@@ -221,7 +246,7 @@ void Compressor1176::initFETLookup()
 	for (int i = 0; i < FET_LOOKUP_SIZE; ++i)
 	{
 		float x = -2.0f + 4.0f * (i / static_cast<float>(FET_LOOKUP_SIZE - 1));
-		fetLUT[i] = saturateFET(x, 1.0f);
+		fetLUT[i] = saturateFET(x, 0.5f);
 	}
 }
 

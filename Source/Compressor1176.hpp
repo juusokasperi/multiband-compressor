@@ -19,7 +19,8 @@ class Compressor1176
 		float mapAttackMs(float knobValue);
 		float mapReleaseMs(float knobValue);
 
-		float processRMS(int ch, float sample);
+		// float processRMS(int ch, float sample);
+		float processPeak(int ch, float sample);
 		void prepare(const juce::dsp::ProcessSpec& spec);
 		void reset();
 
@@ -49,6 +50,7 @@ class Compressor1176
 		std::vector<juce::dsp::IIR::Filter<float>> highShelfFilter;
 		std::vector<float> lastBoostDb;
 		std::vector<float> fetLUT;
+		std::vector<float> compressionHistory;
 
 		juce::dsp::Oversampling<float> overSampling {
 			2,
