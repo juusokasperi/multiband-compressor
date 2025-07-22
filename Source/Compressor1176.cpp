@@ -159,7 +159,7 @@ float Compressor1176::softClip(float x)
 		return x;
 }
 
-// The input gain is compensated w/ +8.0f (and later in output gain -8.0f)
+// The input gain is compensated w/ +12.0f (and later in output gain -12.0f)
 void Compressor1176::process(juce::AudioBuffer<float>& buffer)
 {
 	juce::dsp::AudioBlock<float> inputBlock(buffer);
@@ -171,7 +171,7 @@ void Compressor1176::process(juce::AudioBuffer<float>& buffer)
 
 		for (size_t i = 0; i < numSamples; ++i)
 		{
-			float sample = data[i] * juce::Decibels::decibelsToGain(inputGain + 8.0f);
+			float sample = data[i] * juce::Decibels::decibelsToGain(inputGain + 12.0f);
 
 			sample *= smoothedGainReduction[ch];
 			sample = lookupFET(sample);
@@ -208,7 +208,7 @@ void Compressor1176::process(juce::AudioBuffer<float>& buffer)
 				: getSmoothingCoeff(programDependentRelease);
 			smoothedGainReduction[ch] = coeff * targetGainReduction + (1.0f - coeff) * smoothedGainReduction[ch];
 
-			sample *= juce::Decibels::decibelsToGain(outputGain - 8.0f);
+			sample *= juce::Decibels::decibelsToGain(outputGain - 12.0f);
 			if (std::isnan(sample) || std::isinf(sample))
 				sample = 0.0f;
 			sample = softClip(sample);
