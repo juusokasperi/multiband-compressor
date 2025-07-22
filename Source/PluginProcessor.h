@@ -33,9 +33,9 @@ namespace Params
       {Release, "Release"},
       {Ratio, "Ratio"},
       {Bypass, "Bypass"},
-      {All_Buttons, "AllButtons"},
-      {Input_Gain, "InputGain"},
-      {Output_Gain, "OutputGain"}
+      {All_Buttons, "All Buttons"},
+      {Input_Gain, "Input Gain"},
+      {Output_Gain, "Output Gain"}
     };
 
     return params;

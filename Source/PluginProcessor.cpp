@@ -222,7 +222,6 @@ void MultiBandCompressorAudioProcessor::setStateInformation (const void* data, i
 juce::AudioProcessorValueTreeState::ParameterLayout MultiBandCompressorAudioProcessor::createParameterLayout()
 {
     APVTS::ParameterLayout layout;
-
     using namespace juce;
     using namespace Params;
 
@@ -232,9 +231,9 @@ juce::AudioProcessorValueTreeState::ParameterLayout MultiBandCompressorAudioProc
     layout.add(std::make_unique<AudioParameterFloat>(params.at(Names::Input_Gain), params.at(Names::Input_Gain), gainRange, 0.f));
     layout.add(std::make_unique<AudioParameterFloat>(params.at(Names::Output_Gain), params.at(Names::Output_Gain), gainRange, 0.f));
 
-    auto attackReleaseRange = NormalisableRange<float>(0, 7, 1, 1);
-    layout.add(std::make_unique<AudioParameterFloat>(params.at(Names::Attack), params.at(Names::Attack), attackReleaseRange, 7));
-    layout.add(std::make_unique<AudioParameterFloat>(params.at(Names::Release), params.at(Names::Release), attackReleaseRange, 7));
+    auto attackReleaseRange = NormalisableRange<float>(1, 7, 1, 1);
+    layout.add(std::make_unique<AudioParameterFloat>("Attack", "Attack", attackReleaseRange, 4));
+    layout.add(std::make_unique<AudioParameterFloat>(params.at(Names::Release), params.at(Names::Release), attackReleaseRange, 4));
 
     auto choices = std::vector<double>{ 4, 8, 12, 20 };
     juce::StringArray sa;

@@ -1,10 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="W2kadQ" name="MultiBandCompressor" projectType="audioplug"
-              useAppConfig="0" addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1"
-              companyName="Juuso Rinta">
-  <MAINGROUP id="YdN9Qg" name="MultiBandCompressor">
+<JUCERPROJECT id="W2kadQ" name="1176Compressor" projectType="audioplug" useAppConfig="0"
+              addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" companyName="Juuso Rinta">
+  <MAINGROUP id="YdN9Qg" name="1176Compressor">
     <GROUP id="{BFF23FF0-97B5-76FB-EB49-F64409CD736B}" name="Source">
+      <FILE id="yWgd8Z" name="buttonSelected.png" compile="0" resource="1"
+            file="../buttonSelected.png"/>
+      <FILE id="amxOau" name="knob.png" compile="0" resource="1" file="../knob.png"/>
+      <FILE id="VGY3WN" name="knob2.png" compile="0" resource="1" file="../knob2.png"/>
+      <FILE id="Y4bJzz" name="bg.png" compile="0" resource="1" file="../bg.png"/>
+      <FILE id="ccAG76" name="button.png" compile="0" resource="1" file="../button.png"/>
       <FILE id="oPOr4d" name="PluginProcessor.cpp" compile="1" resource="0"
             file="Source/PluginProcessor.cpp"/>
       <FILE id="g5Fupk" name="PluginProcessor.h" compile="0" resource="0"

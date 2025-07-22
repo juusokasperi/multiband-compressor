@@ -226,7 +226,7 @@ void Compressor1176::process(juce::AudioBuffer<float>& buffer)
 			sample = lookupFET(sample);
 			if (smoothedGainReduction[ch] < 0.95f)
 			{
-				float maxBoost = allButtonsMode ? 3.0f : 2.0f;
+				float maxBoost = 2.0f;
 				float boostDb = juce::jmap(1.0f - smoothedGainReduction[ch], 0.0f, 1.0f, 0.0f, maxBoost);
 				if (std::abs(boostDb - lastBoostDb[ch]) > 0.1f)
 				{
