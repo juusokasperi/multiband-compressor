@@ -10,7 +10,7 @@
 #include "PluginEditor.h"
 
 //==============================================================================
-MultiBandCompressorAudioProcessorEditor::MultiBandCompressorAudioProcessorEditor (MultiBandCompressorAudioProcessor& p)
+SeventySixCompressorAudioProcessorEditor::SeventySixCompressorAudioProcessorEditor (SeventySixCompressorAudioProcessor& p)
 		: AudioProcessorEditor (&p), audioProcessor (p)
 {
 		// Make sure that before the constructor has finished, you've set the
@@ -128,12 +128,12 @@ MultiBandCompressorAudioProcessorEditor::MultiBandCompressorAudioProcessorEditor
 		timerCallback();
 }
 
-MultiBandCompressorAudioProcessorEditor::~MultiBandCompressorAudioProcessorEditor()
+SeventySixCompressorAudioProcessorEditor::~SeventySixCompressorAudioProcessorEditor()
 {
 }
 
 //==============================================================================
-void MultiBandCompressorAudioProcessorEditor::paint (juce::Graphics& g)
+void SeventySixCompressorAudioProcessorEditor::paint (juce::Graphics& g)
 {
 		// (Our component is opaque, so we must completely fill the background with a solid colour)
 		// g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
@@ -144,7 +144,7 @@ void MultiBandCompressorAudioProcessorEditor::paint (juce::Graphics& g)
 		//g.drawFittedText ("Hello World!", getLocalBounds(), juce::Justification::centred, 1);
 }
 
-void MultiBandCompressorAudioProcessorEditor::resized()
+void SeventySixCompressorAudioProcessorEditor::resized()
 {
 	inputKnob.setBounds(80, 40, 60, 60);
 	outputKnob.setBounds(226, 40, 60, 60);
@@ -160,7 +160,7 @@ void MultiBandCompressorAudioProcessorEditor::resized()
 		// subcomponents in your editor..
 }
 
-void MultiBandCompressorAudioProcessorEditor::timerCallback()
+void SeventySixCompressorAudioProcessorEditor::timerCallback()
 {
 	auto* ratioParam = dynamic_cast<juce::AudioParameterChoice*>(audioProcessor.apvts.getParameter("Ratio"));
 	auto* allButtonsParam = dynamic_cast<juce::AudioParameterBool*>(audioProcessor.apvts.getParameter("All Buttons"));

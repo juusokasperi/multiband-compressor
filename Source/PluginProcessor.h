@@ -81,12 +81,12 @@ struct CompressorBand {
 //==============================================================================
 /**
 */
-class MultiBandCompressorAudioProcessor  : public juce::AudioProcessor
+class SeventySixCompressorAudioProcessor  : public juce::AudioProcessor
 {
 public:
     //==============================================================================
-    MultiBandCompressorAudioProcessor();
-    ~MultiBandCompressorAudioProcessor() override;
+    SeventySixCompressorAudioProcessor();
+    ~SeventySixCompressorAudioProcessor() override;
 
     //==============================================================================
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
@@ -131,5 +131,5 @@ private:
 
     void updateState();
     //==============================================================================
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MultiBandCompressorAudioProcessor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SeventySixCompressorAudioProcessor)
 };

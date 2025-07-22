@@ -10,7 +10,7 @@
 #include "PluginEditor.h"
 
 //==============================================================================
-MultiBandCompressorAudioProcessor::MultiBandCompressorAudioProcessor()
+SeventySixCompressorAudioProcessor::SeventySixCompressorAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
      : AudioProcessor (BusesProperties()
                      #if ! JucePlugin_IsMidiEffect
@@ -58,17 +58,17 @@ MultiBandCompressorAudioProcessor::MultiBandCompressorAudioProcessor()
     floatHelper(compressor.outputGain, Names::Output_Gain);
 }
 
-MultiBandCompressorAudioProcessor::~MultiBandCompressorAudioProcessor()
+SeventySixCompressorAudioProcessor::~SeventySixCompressorAudioProcessor()
 {
 }
 
 //==============================================================================
-const juce::String MultiBandCompressorAudioProcessor::getName() const
+const juce::String SeventySixCompressorAudioProcessor::getName() const
 {
     return JucePlugin_Name;
 }
 
-bool MultiBandCompressorAudioProcessor::acceptsMidi() const
+bool SeventySixCompressorAudioProcessor::acceptsMidi() const
 {
    #if JucePlugin_WantsMidiInput
     return true;
@@ -77,7 +77,7 @@ bool MultiBandCompressorAudioProcessor::acceptsMidi() const
    #endif
 }
 
-bool MultiBandCompressorAudioProcessor::producesMidi() const
+bool SeventySixCompressorAudioProcessor::producesMidi() const
 {
    #if JucePlugin_ProducesMidiOutput
     return true;
@@ -86,7 +86,7 @@ bool MultiBandCompressorAudioProcessor::producesMidi() const
    #endif
 }
 
-bool MultiBandCompressorAudioProcessor::isMidiEffect() const
+bool SeventySixCompressorAudioProcessor::isMidiEffect() const
 {
    #if JucePlugin_IsMidiEffect
     return true;
@@ -95,37 +95,37 @@ bool MultiBandCompressorAudioProcessor::isMidiEffect() const
    #endif
 }
 
-double MultiBandCompressorAudioProcessor::getTailLengthSeconds() const
+double SeventySixCompressorAudioProcessor::getTailLengthSeconds() const
 {
     return 0.0;
 }
 
-int MultiBandCompressorAudioProcessor::getNumPrograms()
+int SeventySixCompressorAudioProcessor::getNumPrograms()
 {
     return 1;   // NB: some hosts don't cope very well if you tell them there are 0 programs,
                 // so this should be at least 1, even if you're not really implementing programs.
 }
 
-int MultiBandCompressorAudioProcessor::getCurrentProgram()
+int SeventySixCompressorAudioProcessor::getCurrentProgram()
 {
     return 0;
 }
 
-void MultiBandCompressorAudioProcessor::setCurrentProgram (int index)
+void SeventySixCompressorAudioProcessor::setCurrentProgram (int index)
 {
 }
 
-const juce::String MultiBandCompressorAudioProcessor::getProgramName (int index)
+const juce::String SeventySixCompressorAudioProcessor::getProgramName (int index)
 {
     return {};
 }
 
-void MultiBandCompressorAudioProcessor::changeProgramName (int index, const juce::String& newName)
+void SeventySixCompressorAudioProcessor::changeProgramName (int index, const juce::String& newName)
 {
 }
 
 //==============================================================================
-void MultiBandCompressorAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
+void SeventySixCompressorAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
@@ -139,14 +139,14 @@ void MultiBandCompressorAudioProcessor::prepareToPlay (double sampleRate, int sa
 
 }
 
-void MultiBandCompressorAudioProcessor::releaseResources()
+void SeventySixCompressorAudioProcessor::releaseResources()
 {
     // When playback stops, you can use this as an opportunity to free up any
     // spare memory, etc.
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
-bool MultiBandCompressorAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
+bool SeventySixCompressorAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
 {
   #if JucePlugin_IsMidiEffect
     juce::ignoreUnused (layouts);
@@ -171,13 +171,13 @@ bool MultiBandCompressorAudioProcessor::isBusesLayoutSupported (const BusesLayou
 }
 #endif
 
-void MultiBandCompressorAudioProcessor::updateState()
+void SeventySixCompressorAudioProcessor::updateState()
 {
     for (auto& compressor : compressors)
         compressor.updateCompressorSettings();
 }
 
-void MultiBandCompressorAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
+void SeventySixCompressorAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ScopedNoDenormals noDenormals;
     auto totalNumInputChannels  = getTotalNumInputChannels();
@@ -190,18 +190,18 @@ void MultiBandCompressorAudioProcessor::processBlock (juce::AudioBuffer<float>& 
 }
 
 //==============================================================================
-bool MultiBandCompressorAudioProcessor::hasEditor() const
+bool SeventySixCompressorAudioProcessor::hasEditor() const
 {
     return true; // (change this to false if you choose to not supply an editor)
 }
 
-juce::AudioProcessorEditor* MultiBandCompressorAudioProcessor::createEditor()
+juce::AudioProcessorEditor* SeventySixCompressorAudioProcessor::createEditor()
 {
-    return new MultiBandCompressorAudioProcessorEditor (*this);
+    return new SeventySixCompressorAudioProcessorEditor (*this);
 }
 
 //==============================================================================
-void MultiBandCompressorAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
+void SeventySixCompressorAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
     // You should use this method to store your parameters in the memory block.
     // You could do that either as raw data, or use the XML or ValueTree classes
@@ -210,7 +210,7 @@ void MultiBandCompressorAudioProcessor::getStateInformation (juce::MemoryBlock& 
     apvts.state.writeToStream(mos);
 }
 
-void MultiBandCompressorAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
+void SeventySixCompressorAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
@@ -219,7 +219,7 @@ void MultiBandCompressorAudioProcessor::setStateInformation (const void* data, i
         apvts.replaceState(tree);
 }
 
-juce::AudioProcessorValueTreeState::ParameterLayout MultiBandCompressorAudioProcessor::createParameterLayout()
+juce::AudioProcessorValueTreeState::ParameterLayout SeventySixCompressorAudioProcessor::createParameterLayout()
 {
     APVTS::ParameterLayout layout;
     using namespace juce;
@@ -249,5 +249,5 @@ juce::AudioProcessorValueTreeState::ParameterLayout MultiBandCompressorAudioProc
 // This creates new instances of the plugin..
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
-    return new MultiBandCompressorAudioProcessor();
+    return new SeventySixCompressorAudioProcessor();
 }

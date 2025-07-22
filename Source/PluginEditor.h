@@ -34,18 +34,18 @@ class KnobLookAndFeel : public juce::LookAndFeel_V4
 //==============================================================================
 /**
 */
-class MultiBandCompressorAudioProcessorEditor  : public juce::AudioProcessorEditor, private juce::Timer
+class SeventySixCompressorAudioProcessorEditor  : public juce::AudioProcessorEditor, private juce::Timer
 {
 public:
-    MultiBandCompressorAudioProcessorEditor (MultiBandCompressorAudioProcessor&);
-    ~MultiBandCompressorAudioProcessorEditor() override;
+    SeventySixCompressorAudioProcessorEditor (SeventySixCompressorAudioProcessor&);
+    ~SeventySixCompressorAudioProcessorEditor() override;
 
     //==============================================================================
     void paint (juce::Graphics&) override;
     void resized() override;
 
 private:
-    MultiBandCompressorAudioProcessor& audioProcessor;
+    SeventySixCompressorAudioProcessor& audioProcessor;
     void timerCallback() override;
 
     juce::Image backgroundImg;
@@ -63,5 +63,5 @@ private:
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> attackAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> releaseAttachment;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MultiBandCompressorAudioProcessorEditor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SeventySixCompressorAudioProcessorEditor)
 };

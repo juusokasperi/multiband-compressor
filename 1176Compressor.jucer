@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="W2kadQ" name="1176Compressor" projectType="audioplug" useAppConfig="0"
-              addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" companyName="Juuso Rinta">
+              addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" companyName="Juuso Rinta"
+              pluginName="1176Compressor" pluginCode="w2Ka" pluginVST3Category="Dynamics"
+              pluginAAXCategory="2">
   <MAINGROUP id="YdN9Qg" name="1176Compressor">
     <GROUP id="{BFF23FF0-97B5-76FB-EB49-F64409CD736B}" name="Source">
       <FILE id="yWgd8Z" name="buttonSelected.png" compile="0" resource="1"
@@ -43,8 +45,8 @@
   <EXPORTFORMATS>
     <XCODE_MAC targetFolder="Builds/MacOSX">
       <CONFIGURATIONS>
-        <CONFIGURATION isDebug="1" name="Debug" targetName="MultiBandCompressor"/>
-        <CONFIGURATION isDebug="0" name="Release" targetName="MultiBandCompressor"/>
+        <CONFIGURATION isDebug="1" name="Debug" targetName="1176Compressor"/>
+        <CONFIGURATION isDebug="0" name="Release" targetName="1176Compressor"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
         <MODULEPATH id="juce_audio_basics" path="../../JUCE-Git/modules"/>
