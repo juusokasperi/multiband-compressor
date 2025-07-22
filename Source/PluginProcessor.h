@@ -1,15 +1,17 @@
-/*
-  ==============================================================================
-
-    This file contains the basic framework code for a JUCE plugin processor.
-
-  ==============================================================================
-*/
-
 #pragma once
 
 #include <JuceHeader.h>
 #include "Compressor1176.hpp"
+
+/*
+GUI:
+1) controls for attack, release, ratio, i/o gain
+2) add bypass
+3) spectrum analyzer
+4) data structs for spectrum analyzer
+5) fifo usage in pluginProcessor processBlcok
+6)
+*/
 
 namespace Params
 {
@@ -19,6 +21,7 @@ namespace Params
     Release,
     Ratio,
     Bypass,
+    All_Buttons,
     Input_Gain,
     Output_Gain
   };
@@ -30,8 +33,9 @@ namespace Params
       {Release, "Release"},
       {Ratio, "Ratio"},
       {Bypass, "Bypass"},
-      {Input_Gain, "Gain In"},
-      {Output_Gain, "Gain Out"}
+      {All_Buttons, "AllButtons"},
+      {Input_Gain, "InputGain"},
+      {Output_Gain, "OutputGain"}
     };
 
     return params;
@@ -48,6 +52,7 @@ struct CompressorBand {
     juce::AudioParameterFloat* inputGain { nullptr };
     juce::AudioParameterFloat* outputGain { nullptr };
     juce::AudioParameterBool* bypass { nullptr };
+    juce::AudioParameterBool* allButtons { nullptr };
 
     void prepare(const juce::dsp::ProcessSpec& spec)
     {
@@ -58,6 +63,7 @@ struct CompressorBand {
     {
       compressor.setAttack(attack->get());
       compressor.setRelease(release->get());
+      compressor.setAllButtons(allButtons->get());
 
       compressor.setRatio(
           ratio->getCurrentChoiceName().getFloatValue());
@@ -118,8 +124,7 @@ public:
     using APVTS = juce::AudioProcessorValueTreeState;
     static APVTS::ParameterLayout createParameterLayout();
 
-    APVTS apvts { *this, nullptr,
-        "Parameters", createParameterLayout() };
+    APVTS apvts;
 private:
     std::array<CompressorBand, 1> compressors;
     CompressorBand& compressor = compressors[0];

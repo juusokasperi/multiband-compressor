@@ -13,6 +13,7 @@ class Compressor1176
 		void setAttack(float knobValue);
 		void setRelease(float knobValue);
 		void setOutputGain(float newOutputGain);
+		void setAllButtons(bool newValue);
 
 		float getSmoothingCoeff(float timeMs);
 		float getThreshold();
@@ -24,6 +25,8 @@ class Compressor1176
 		void prepare(const juce::dsp::ProcessSpec& spec);
 		void reset();
 
+		float getRatio();
+
 		void process(juce::AudioBuffer<float>& buffer);
 
 		// Fet
@@ -33,6 +36,13 @@ class Compressor1176
 		float lookupFET(float x);
 		float softClip(float x);
 	private:
+		// Settings for allButtonsMode
+		bool allButtonsMode = false;
+		float ratioModulation = 0.0f;
+		std::vector<float> transientDetector;
+		std::vector<float> slowEnvelope;
+		float allButtonsDistortion = 1.0f;
+
 		float inputGain = 0.0f;
 		float outputGain = 0.0f;
 		float ratio = 4.0f;

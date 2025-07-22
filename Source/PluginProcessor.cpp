@@ -21,6 +21,7 @@ MultiBandCompressorAudioProcessor::MultiBandCompressorAudioProcessor()
                      #endif
                        )
 #endif
+    , apvts(*this, nullptr, "Parameters", createParameterLayout())
 {
     using namespace Params;
     const auto& params = GetParams();
@@ -36,7 +37,9 @@ MultiBandCompressorAudioProcessor::MultiBandCompressorAudioProcessor()
 
     auto choiceHelper = [&apvts = this->apvts, &params](auto& param, const auto& paramName)
     {
+        DBG("Trying to get parameter: " << params.at(paramName));
         param = dynamic_cast<juce::AudioParameterChoice*>(apvts.getParameter(params.at(paramName)));
+        DBG("Result: " << ((param == nullptr) ? "nullptr" : "not null!"));
         jassert(param != nullptr);
     };
 
@@ -49,6 +52,7 @@ MultiBandCompressorAudioProcessor::MultiBandCompressorAudioProcessor()
     };
 
     boolHelper(compressor.bypass, Names::Bypass);
+    boolHelper(compressor.allButtons, Names::All_Buttons);
 
     floatHelper(compressor.inputGain, Names::Input_Gain);
     floatHelper(compressor.outputGain, Names::Output_Gain);
@@ -133,8 +137,6 @@ void MultiBandCompressorAudioProcessor::prepareToPlay (double sampleRate, int sa
     for (auto &comp : compressors)
         comp.prepare(spec);
 
-    // inputGain.setRampDurationSeconds(0.05);
-    // outputGain.setRampDurationSeconds(0.05);
 }
 
 void MultiBandCompressorAudioProcessor::releaseResources()
@@ -227,12 +229,12 @@ juce::AudioProcessorValueTreeState::ParameterLayout MultiBandCompressorAudioProc
     const auto& params = GetParams();
 
     auto gainRange = NormalisableRange<float>(-12.f, 12.f, 0.5f, 1);
-    layout.add(std::make_unique<AudioParameterFloat>(params.at(Names::Input_Gain), params.at(Names::Input_Gain), gainRange, 0));
-    layout.add(std::make_unique<AudioParameterFloat>(params.at(Names::Output_Gain), params.at(Names::Output_Gain), gainRange, 0));
+    layout.add(std::make_unique<AudioParameterFloat>(params.at(Names::Input_Gain), params.at(Names::Input_Gain), gainRange, 0.f));
+    layout.add(std::make_unique<AudioParameterFloat>(params.at(Names::Output_Gain), params.at(Names::Output_Gain), gainRange, 0.f));
 
     auto attackReleaseRange = NormalisableRange<float>(0, 7, 1, 1);
-    layout.add(std::make_unique<AudioParameterFloat>(params.at(Names::Attack), params.at(Names::Attack), attackReleaseRange, 50));
-    layout.add(std::make_unique<AudioParameterFloat>(params.at(Names::Release), params.at(Names::Release), attackReleaseRange, 250));
+    layout.add(std::make_unique<AudioParameterFloat>(params.at(Names::Attack), params.at(Names::Attack), attackReleaseRange, 7));
+    layout.add(std::make_unique<AudioParameterFloat>(params.at(Names::Release), params.at(Names::Release), attackReleaseRange, 7));
 
     auto choices = std::vector<double>{ 4, 8, 12, 20 };
     juce::StringArray sa;
@@ -240,6 +242,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout MultiBandCompressorAudioProc
         sa.add(juce::String(choice, 1));
     layout.add(std::make_unique<AudioParameterChoice>(params.at(Names::Ratio), params.at(Names::Ratio), sa, 0));
     layout.add(std::make_unique<AudioParameterBool>(params.at(Names::Bypass), params.at(Names::Bypass), false));
+    layout.add(std::make_unique<AudioParameterBool>(params.at(Names::All_Buttons), params.at(Names::All_Buttons), false));
     return layout;
 }
 

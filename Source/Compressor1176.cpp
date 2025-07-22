@@ -23,6 +23,7 @@ float Compressor1176::mapReleaseMs(float knobValue)
 }
 void Compressor1176::setInputGain(float newInputGain) { inputGain = newInputGain; }
 void Compressor1176::setRatio(float newRatio) { ratio = newRatio; }
+void Compressor1176::setAllButtons(bool newValue) { allButtonsMode = newValue; }
 
 void Compressor1176::setAttack(float knobValue)
 {
@@ -56,6 +57,9 @@ void Compressor1176::prepare( const juce::dsp::ProcessSpec& spec)
 	overSampledSpec.maximumBlockSize = spec.maximumBlockSize * static_cast<int>(overSamplingFactor);
 	overSampledSpec.numChannels = spec.numChannels;
 
+	transientDetector.resize(numChannels, 0.0f);
+	slowEnvelope.resize(numChannels, 0.0f);
+
 	lowShelfFilter.clear();
 	highShelfFilter.clear();
 	lowShelfFilter.resize(numChannels);
@@ -77,6 +81,10 @@ void Compressor1176::reset()
 	overSampling.reset();
 	envelope.resize(numChannels, 0.0f);
 	smoothedGainReduction.resize(numChannels, 1.0f);
+	transientDetector.resize(numChannels, 0.0f);
+	slowEnvelope.resize(numChannels, 0.0f);
+	ratioModulation = 0.0f;
+	allButtonsDistortion = 1.0f;
 	lowShelfFilter.clear();
 	highShelfFilter.clear();
 	for (int ch = 0; ch < numChannels; ++ch)
@@ -90,12 +98,29 @@ void Compressor1176::reset()
 
 float Compressor1176::getThreshold()
 {
+	if (allButtonsMode)
+	{
+		float baseThreshold = -8.6f;
+		float modulation = ratioModulation * 2.0f;
+		return baseThreshold + modulation;
+	}
 	if (ratio == 4.0f)	return -15.f;
 	if (ratio == 8.0f)	return -10.8f;
 	if (ratio == 12.0f)	return -9.6f;
 	if (ratio == 20.0f)	return -7.6f;
 
 	return (-15.f);
+}
+
+float Compressor1176::getRatio()
+{
+	if (allButtonsMode)
+	{
+		float baseRatio = 16.0f;
+		float variation = ratioModulation * 4.0f;
+		return std::clamp(baseRatio + variation, 12.0f, 20.0f);
+	}
+	return ratio;
 }
 
 float Compressor1176::computeGainReduction(float level)
@@ -106,7 +131,8 @@ float Compressor1176::computeGainReduction(float level)
 	if (overThreshold <= 0.0f)
 		return 1.0f;
 
-	float compressedDb = overThreshold / ratio;
+	float effectiveRatio = getRatio();
+	float compressedDb = overThreshold / effectiveRatio;
 	float gainReductionDb = overThreshold - compressedDb;
 	gainReductionDb = std::clamp(gainReductionDb, 0.0f, 60.0f);
 	return juce::Decibels::decibelsToGain(-gainReductionDb);
@@ -162,6 +188,7 @@ float Compressor1176::softClip(float x)
 // The input gain is compensated w/ +12.0f (and later in output gain -12.0f)
 void Compressor1176::process(juce::AudioBuffer<float>& buffer)
 {
+	DBG("All buttons Mode: " << (allButtonsMode ? "true" : "false"));
 	juce::dsp::AudioBlock<float> inputBlock(buffer);
 	juce::dsp::AudioBlock<float> oversampledBlock = overSampling.processSamplesUp(inputBlock);
 	for (int ch = 0; ch < oversampledBlock.getNumChannels(); ++ch)
@@ -173,11 +200,33 @@ void Compressor1176::process(juce::AudioBuffer<float>& buffer)
 		{
 			float sample = data[i] * juce::Decibels::decibelsToGain(inputGain + 12.0f);
 
+			if (allButtonsMode)
+			{
+				float absSample = std::abs(sample);
+				float fastCoeff = getSmoothingCoeff(0.1f);
+				float slowCoeff = getSmoothingCoeff(100.0f);
+				transientDetector[ch] = fastCoeff * absSample + (1.0f - fastCoeff) * transientDetector[ch];
+				slowEnvelope[ch] = slowCoeff * absSample + (1.0f - slowCoeff) * slowEnvelope[ch];
+				float transientRatio = transientDetector[ch] / (slowEnvelope[ch] + 1e-6f);
+				bool isTransient = transientRatio > 2.0f;
+				if (isTransient)
+				{
+					ratioModulation = std::sin(static_cast<float>(i) * 0.001f) * 0.5f;
+					allButtonsDistortion = 1.0f + transientRatio * 0.3f;
+				}
+				else
+				{
+					allButtonsDistortion *= 0.999f;
+					allButtonsDistortion = std::max(allButtonsDistortion, 1.0f);
+				}
+				sample = lookupFET(sample * allButtonsDistortion) / allButtonsDistortion;
+			}
+
 			sample *= smoothedGainReduction[ch];
 			sample = lookupFET(sample);
 			if (smoothedGainReduction[ch] < 0.95f)
 			{
-				float maxBoost = 2.0f;
+				float maxBoost = allButtonsMode ? 3.0f : 2.0f;
 				float boostDb = juce::jmap(1.0f - smoothedGainReduction[ch], 0.0f, 1.0f, 0.0f, maxBoost);
 				if (std::abs(boostDb - lastBoostDb[ch]) > 0.1f)
 				{
@@ -193,6 +242,16 @@ void Compressor1176::process(juce::AudioBuffer<float>& buffer)
 			float peakLevel = processPeak(ch, sample);
 			float targetGainReduction = computeGainReduction(peakLevel);
 
+			float effectiveAttackTime = attackTime;
+			float effectiveReleaseTime = releaseTime;
+			if (allButtonsMode)
+			{
+				effectiveAttackTime *= (1.0f + ratioModulation * 0.5f);
+				effectiveReleaseTime *= (1.0f - ratioModulation * 0.3f);
+				effectiveAttackTime = std::clamp(effectiveAttackTime, 0.01f, 2.0f);
+				effectiveReleaseTime = std::clamp(effectiveReleaseTime, 20.0f, 2000.0f);
+			}
+
 			float compressionAmount = 1.0f - targetGainReduction;
 			if (compressionAmount > 0.05f)
 			{
@@ -201,10 +260,10 @@ void Compressor1176::process(juce::AudioBuffer<float>& buffer)
 			}
 			else
 				compressionHistory[ch] *= 0.999f;
-			float programDependentRelease = releaseTime * (1.0f - compressionHistory[ch] * 0.6f);
+			float programDependentRelease = effectiveReleaseTime * (1.0f - compressionHistory[ch] * 0.6f);
 
 			float coeff = (targetGainReduction < smoothedGainReduction[ch])
-				? getSmoothingCoeff(attackTime)
+				? getSmoothingCoeff(effectiveAttackTime)
 				: getSmoothingCoeff(programDependentRelease);
 			smoothedGainReduction[ch] = coeff * targetGainReduction + (1.0f - coeff) * smoothedGainReduction[ch];
 
