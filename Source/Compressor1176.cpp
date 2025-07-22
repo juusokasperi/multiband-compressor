@@ -14,7 +14,7 @@ static float clamp(float value)
 
 float Compressor1176::mapAttackMs(float knobValue)
 {
-	return juce::jmap(clamp(knobValue), 1.0f, 7.0f, 0.8f, 0.2f);
+	return juce::jmap(clamp(knobValue), 1.0f, 7.0f, 0.8f, 0.02f);
 }
 
 float Compressor1176::mapReleaseMs(float knobValue)
@@ -203,7 +203,7 @@ float Compressor1176::saturateFET(float x, float drive)
 	float threshold = 0.7f;
 	float scaledInput = x / threshold;
 
-	float asym = 0.15f;
+	float asym = 0.3f;
 
 	float saturated = 0;
 
