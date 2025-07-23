@@ -188,7 +188,6 @@ float Compressor1176::softClip(float x)
 // The input gain is compensated w/ +12.0f (and later in output gain -12.0f)
 void Compressor1176::process(juce::AudioBuffer<float>& buffer)
 {
-	DBG("All buttons Mode: " << (allButtonsMode ? "true" : "false"));
 	juce::dsp::AudioBlock<float> inputBlock(buffer);
 	juce::dsp::AudioBlock<float> oversampledBlock = overSampling.processSamplesUp(inputBlock);
 	for (int ch = 0; ch < oversampledBlock.getNumChannels(); ++ch)
