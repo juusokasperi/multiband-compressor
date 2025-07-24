@@ -135,13 +135,34 @@ SeventySixCompressorAudioProcessorEditor::~SeventySixCompressorAudioProcessorEdi
 //==============================================================================
 void SeventySixCompressorAudioProcessorEditor::paint (juce::Graphics& g)
 {
-		// (Our component is opaque, so we must completely fill the background with a solid colour)
-		// g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
-
 		g.drawImage(backgroundImg, getLocalBounds().toFloat());
-		g.setColour (juce::Colours::white);
-		g.setFont (juce::FontOptions (15.0f));
-		//g.drawFittedText ("Hello World!", getLocalBounds(), juce::Justification::centred, 1);
+
+		float meterValue = 0.0f;
+		if (meterMode != OFF)
+		{
+			meterValue = audioProcessor.getGainReductionDb();
+			if (meterMode == PLUS4)
+				meterValue += 4.0f;
+			else if (meterMode == PLUS8)
+				meterValue += 8.0f;
+			float minDb = -20.0f;
+			float maxDb = 3.0f;
+			meterValue = juce::jlimit(minDb, maxDb, meterValue);
+			float norm = (meterValue - minDb) / (maxDb - minDb);
+
+			juce::Point<float> center(565, 85);
+			float radius = 40.0f;
+			float startAngle = juce::MathConstants<float>::pi * 5.0f / 6.0f;
+			float endAngle = juce::MathConstants<float>::pi * 2.0f / 6.0f;
+			float angle = startAngle + norm * (endAngle - startAngle);
+			juce::Point<float> needleEnd = center + juce::Point<float>(std::cos(angle), -std::sin(angle)) * radius;
+			g.setColour(juce::Colours::black);
+			g.drawLine(center.x, center.y, needleEnd.x, needleEnd.y, 1.0f);
+
+			g.setColour(juce::Colours::black);
+			g.setFont(14.0f);
+			g.drawFittedText(juce::String(meterValue, 2) + " dB", center.x - 30, center.y + 20, 60, 20, juce::Justification::centred, 1);
+		}
 }
 
 void SeventySixCompressorAudioProcessorEditor::resized()
@@ -185,4 +206,5 @@ void SeventySixCompressorAudioProcessorEditor::timerCallback()
 		ratio12Button.setToggleState(idx == 2, juce::dontSendNotification);
 		ratio20Button.setToggleState(idx == 3, juce::dontSendNotification);
 	}
+	repaint();
 }

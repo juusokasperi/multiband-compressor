@@ -71,6 +71,8 @@ struct CompressorBand {
       compressor.setOutputGain(outputGain->get());
     }
 
+    float getGainReductionDb() const { return compressor.getGainReductionDb(); }
+
     void process(juce::AudioBuffer<float>& buffer)
     {
       if (!bypass->get())
@@ -125,6 +127,8 @@ public:
     static APVTS::ParameterLayout createParameterLayout();
 
     APVTS apvts;
+
+    float getGainReductionDb() const { return compressor.getGainReductionDb(); }
 private:
     std::array<CompressorBand, 1> compressors;
     CompressorBand& compressor = compressors[0];

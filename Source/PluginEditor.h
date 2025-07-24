@@ -11,6 +11,7 @@
 #include <memory>
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
+
 class KnobLookAndFeel : public juce::LookAndFeel_V4
 {
   public:
@@ -19,7 +20,7 @@ class KnobLookAndFeel : public juce::LookAndFeel_V4
         float sliderPosProportional, float rotaryStartAngle, float rotaryEndAngle, juce::Slider&) override
     {
       const float angle = rotaryStartAngle + sliderPosProportional * (rotaryEndAngle - rotaryStartAngle);
-      const float radius = juce::jmin(width, height) / 2.0f;
+      // const float radius = juce::jmin(width, height) / 2.0f;
       const float centreX = x + width * 0.5f;
       const float centreY = y + height * 0.5f;
       g.saveState();
@@ -47,6 +48,9 @@ public:
 private:
     SeventySixCompressorAudioProcessor& audioProcessor;
     void timerCallback() override;
+
+    enum MeterMode { GR, PLUS4, PLUS8, OFF };
+    MeterMode meterMode = GR;
 
     juce::Image backgroundImg;
     juce::Image knobImg;

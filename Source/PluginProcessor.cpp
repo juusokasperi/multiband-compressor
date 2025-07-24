@@ -227,7 +227,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout SeventySixCompressorAudioPro
 
     const auto& params = GetParams();
 
-    auto gainRange = NormalisableRange<float>(-12.f, 12.f, 0.5f, 1);
+    auto gainRange = NormalisableRange<float>(-40.f, 40.f, 0.5f, 1);
     layout.add(std::make_unique<AudioParameterFloat>(params.at(Names::Input_Gain), params.at(Names::Input_Gain), gainRange, 0.f));
     layout.add(std::make_unique<AudioParameterFloat>(params.at(Names::Output_Gain), params.at(Names::Output_Gain), gainRange, 0.f));
 

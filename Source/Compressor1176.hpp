@@ -35,13 +35,16 @@ class Compressor1176
 		float cubicInterpolate(float y0, float y1, float y2, float y3, float x);
 		float lookupFET(float x);
 		float softClip(float x);
+
+		float getGainReductionDb() const { return lastGainReductionDb.load(); }
 	private:
+		// GR for VU Meter
+		std::atomic<float> lastGainReductionDb = 0.f;
 		// Settings for allButtonsMode
 		bool allButtonsMode = false;
 		float ratioModulation = 0.0f;
 		std::vector<float> transientDetector;
 		std::vector<float> slowEnvelope;
-		float allButtonsDistortion = 1.0f;
 
 		float inputGain = 0.0f;
 		float outputGain = 0.0f;
